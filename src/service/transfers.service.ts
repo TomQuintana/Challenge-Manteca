@@ -13,9 +13,11 @@ export class TransferService {
     destination: string,
     amount: Number,
     pinToken: Number,
-    currency: Number,
+    currency: string,
+    destinationType: string,
   ) {
     const amountNumber: number = Number(amount);
+    
 
     if (amountNumber >= 1000 && pinToken === undefined) {
       const msg =
@@ -25,43 +27,75 @@ export class TransferService {
       return { Message: msg, Pin: pin, Status: "Pending" };
     }
 
+    let currencyType: string;
+
+    if (currency === "usd") {
+      currencyType = "balance_usd";
+    } else {
+      currencyType = "balance_ars";
+    }
+
     const payloadToken = await this.authService.decodedToken(token);
 
     const userOrigin = await this.userService.getUserByEmail(payloadToken);
-    const userAccountDestination =
-      await this.userService.getOrigin(destination);
 
     const userAccountOrigin = await this.userService.getUserAccount(
       userOrigin._id,
     );
 
-    if (amount > userAccountOrigin.balance_ars) {
+    const userAccountDestination = await this.userService.getOrigin(destination);
+
+    if (
+      amount > userAccountOrigin.balance_ars ||
+      amount > userAccountOrigin.balance_usd
+    ) {
       const msg = "No puede transferir esa cantidad de dinero";
       return msg;
     }
 
     const userAccountBalanceArs: number = Number(userAccountOrigin.balance_ars);
+    const userAccountBalanceUsd: number = Number(userAccountOrigin.balance_usd);
+
     const userDestinationAccountBalanceArs: number = Number(
       userAccountDestination.balance_ars,
     );
 
-    if (isNaN(userAccountBalanceArs) || isNaN(amountNumber)) {
+    const userDestinationAccountBalanceUsd: number = Number(
+      userAccountDestination.balance_usd,
+    );
+
+    if (isNaN(userAccountBalanceArs) || isNaN(amountNumber) || isNaN(userDestinationAccountBalanceArs) || isNaN(userDestinationAccountBalanceUsd)){
       throw new Error("Balance or amount is not a valid number");
     }
 
-    const modifyBalanceOrigin = userAccountBalanceArs - amountNumber;
-    const modifyBalanceDestination =
-      userDestinationAccountBalanceArs + amountNumber;
+    const modifyBalanceOriginArs = userAccountBalanceArs - amountNumber;
+
+    const modifyBalanceDestinationArs = userDestinationAccountBalanceArs + amountNumber;
+
+    const modifyBalanceOriginUsd = userAccountBalanceUsd - amountNumber;
+
+    const modifyBalanceDestinationUsd = userDestinationAccountBalanceUsd + amountNumber;
 
     const userIdString = userOrigin._id.toString();
     const userDestinarionIdString = userAccountDestination.userId.toString();
 
-    await this.userService.modifyBalance(userIdString, modifyBalanceOrigin);
+    if (currency === "usd") {
+      await this.userService.modifyBalance(userIdString, modifyBalanceOriginUsd, currencyType);
 
-    await this.userService.modifyBalance(
-      userDestinarionIdString,
-      modifyBalanceDestination,
-    );
+      await this.userService.modifyBalance(
+        userDestinarionIdString,
+        modifyBalanceDestinationUsd,
+        currency
+      );
+    } else {
+      await this.userService.modifyBalance(userIdString, modifyBalanceOriginArs, currencyType);
+
+      await this.userService.modifyBalance(
+        userDestinarionIdString,
+        modifyBalanceDestinationArs,
+        currency 
+      );
+    }
 
     await this.mongoRepository.creteTransferRecord({
       userId: userAccountOrigin.userId,
@@ -73,9 +107,24 @@ export class TransferService {
 
     return {
       msg: "Transferencia realizada con exito",
-      balance: modifyBalanceOrigin,
-      amount: amount,
+      balance: currency === "usd" ? `$${modifyBalanceOriginUsd}` : `$${modifyBalanceOriginArs }`,
+      amount: `$${ amount }`,
       status: "Success",
     };
+  }
+
+  public async showTransferHistory(token: any) {
+    const payloadToken = await this.authService.decodedToken(token);
+
+    const user = await this.userService.getUserByEmail(payloadToken);
+    const userAccountOrigin = await this.userService.getUserAccount(
+      user._id,
+    );
+
+    const transferHistory = await this.mongoRepository.showTransfers(
+      userAccountOrigin.userId,
+    );
+
+    return transferHistory;
   }
 }

@@ -25,18 +25,38 @@ export class UserAccountMongoRepository implements UserAccountRepository {
     return userAccount
   }
 
-  async findUserByAliasOrCbu(alias: string) {
-    const userDestination = await userAccountModel.findOne({alias});
-    return userDestination 
+  async findUserByAliasOrCbu(identifier: string) {
+    console.log(identifier);
+    
+    const userDestination = await userAccountModel.findOne({
+      $or: [
+        { cbu: identifier },
+        { alias: identifier }
+      ]
+    });
+    return userDestination;
   }
 
-  async updateBalanceUser (userId: string, newBalance: number) {
+
+  async updateBalanceUserArs(userId: string, newBalance: number) {
     const userAccount = await userAccountModel.findOneAndUpdate({userId}, {balance_ars: newBalance});
     return userAccount;
   }
 
+
+  async updateBalanceUserUsd (userId: string, newBalance: number) {
+    const userAccount = await userAccountModel.findOneAndUpdate({userId}, {balance_usd: newBalance});
+    return userAccount;
+  }
+
+
   async creteTransferRecord(transferEntry: object) {
     const newTransfer = await transferModel.create(transferEntry);
     return newTransfer;
+  }
+
+  async showTransfers(userId: string) {
+    const transfers = await transferModel.find({userId});
+    return transfers;
   }
 }

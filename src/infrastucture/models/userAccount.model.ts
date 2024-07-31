@@ -5,7 +5,7 @@ interface IAccountSchema{
   name: string;
   email: string;
   dni: number;
-  cbu: Number;
+  cbu: string;
   alias: String;
   balance_usd: Number;
   balance_ars: Number;
@@ -29,7 +29,7 @@ const AccountSchema = new Schema<IAccountSchema>({
     required: true 
   },
   cbu: {
-    type: Number,
+    type: String,
     required: false,
     unique: true,
   },

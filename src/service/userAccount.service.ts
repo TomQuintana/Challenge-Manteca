@@ -52,6 +52,7 @@ export class UserAccountService {
     for (let i = 0; i < longitud; i++) {
       id += Math.floor(Math.random() * 10); // Añade un dígito aleatorio
     }
+    //TODO: pasar a string
     return id;
   }
 
@@ -130,8 +131,12 @@ export class UserAccountService {
     return await this.mongoRepository.findUserByAliasOrCbu(alias);
   }
 
-  public async modifyBalance(userId: string, balance: number) {
-    console.log(userId, balance);
-    return await this.mongoRepository.updateBalanceUser(userId, balance);
+  public async modifyBalance(userId: string, balance: number, currencyType: string) {
+    console.log();
+    
+    if (currencyType === "usd") {
+      return await this.mongoRepository.updateBalanceUserUsd(userId, balance);
+    }
+    return await this.mongoRepository.updateBalanceUserArs(userId, balance);
   }
 }
