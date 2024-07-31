@@ -28,9 +28,9 @@ export class TransferService {
 
     const payloadToken = await this.authService.decodedToken(token);
 
-    const userOrigin = await this.getUserByEmail(payloadToken);
+    const userOrigin = await this.userService.getUserByEmail(payloadToken);
 
-    const userAccountOrigin = await this.getUserAccount(
+    const userAccountOrigin = await this.userService.getUserAccount(
       userOrigin._id,
     );
 
@@ -107,8 +107,8 @@ export class TransferService {
   public async showTransferHistory(token: any) {
     const payloadToken = await this.authService.decodedToken(token);
 
-    const user = await this.getUserByEmail(payloadToken);
-    const userAccountOrigin = await this.getUserAccount(
+    const user = await this.userService.getUserByEmail(payloadToken);
+    const userAccountOrigin = await this.userService.getUserAccount(
       user._id,
     );
 
@@ -119,13 +119,6 @@ export class TransferService {
     return transferHistory;
   }
 
-  private async getUserByEmail(payload: any) {
-    return await this.mongoRepository.findUserByEmail(payload.email);
-  }
-
-  private async getUserAccount(userId: any) {
-    return await this.mongoRepository.findUserAccountById(userId);
-  }
 
   private async modifyBalance(userId: string, balance: number, currencyType: string) {
     console.log(userId, balance, currencyType);

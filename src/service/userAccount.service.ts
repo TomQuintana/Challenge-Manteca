@@ -135,4 +135,18 @@ export class UserAccountService {
     }
     return await this.mongoRepository.updateBalanceUserArs(userId, balance);
   }
+
+  public async getUser(beareToken: any) {
+    const payloadToken = await this.authService.decodedToken(beareToken);
+
+    const user = await this.getUserByEmail(payloadToken);
+    const userAccount = await this.getUserAccount(
+      user._id,
+    );
+
+    return {
+      user: user,
+      userAccount: userAccount
+    };
+  }
 }

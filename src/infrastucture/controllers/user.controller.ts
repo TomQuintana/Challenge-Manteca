@@ -38,7 +38,29 @@ const login = async (req: Request, res: Response) => {
   }
 }
 
+const getUser = async (req: Request, res: Response) => {
+  try {
+    const token = req.headers['authorization'];
+
+    const splitToken = token.split(' ');
+    const bearerToken = splitToken[1]
+    const user = await userService.getUser(bearerToken);
+
+    if (!user) {
+      return res.status(400).json({
+        msg: "The User does not exist"
+      });
+    }
+
+    return res.send({user});
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+
 export {
   createUser,
-  login
+  login,
+  getUser
 }
