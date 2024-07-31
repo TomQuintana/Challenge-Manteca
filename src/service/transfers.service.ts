@@ -14,10 +14,9 @@ export class TransferService {
     amount: Number,
     pinToken: Number,
     currency: string,
-    destinationType: string,
   ) {
+
     const amountNumber: number = Number(amount);
-    
 
     if (amountNumber >= 1000 && pinToken === undefined) {
       const msg =
@@ -27,23 +26,15 @@ export class TransferService {
       return { Message: msg, Pin: pin, Status: "Pending" };
     }
 
-    let currencyType: string;
-
-    if (currency === "usd") {
-      currencyType = "balance_usd";
-    } else {
-      currencyType = "balance_ars";
-    }
-
     const payloadToken = await this.authService.decodedToken(token);
 
-    const userOrigin = await this.userService.getUserByEmail(payloadToken);
+    const userOrigin = await this.getUserByEmail(payloadToken);
 
-    const userAccountOrigin = await this.userService.getUserAccount(
+    const userAccountOrigin = await this.getUserAccount(
       userOrigin._id,
     );
 
-    const userAccountDestination = await this.userService.getOrigin(destination);
+    const userAccountDestination = await this.getOrigin(destination);
 
     if (
       amount > userAccountOrigin.balance_ars ||
@@ -80,17 +71,17 @@ export class TransferService {
     const userDestinarionIdString = userAccountDestination.userId.toString();
 
     if (currency === "usd") {
-      await this.userService.modifyBalance(userIdString, modifyBalanceOriginUsd, currencyType);
+      await this.modifyBalance(userIdString, modifyBalanceOriginUsd, currency);
 
-      await this.userService.modifyBalance(
+      await this.modifyBalance(
         userDestinarionIdString,
         modifyBalanceDestinationUsd,
         currency
       );
     } else {
-      await this.userService.modifyBalance(userIdString, modifyBalanceOriginArs, currencyType);
+      await this.modifyBalance(userIdString, modifyBalanceOriginArs, currency);
 
-      await this.userService.modifyBalance(
+      await this.modifyBalance(
         userDestinarionIdString,
         modifyBalanceDestinationArs,
         currency 
@@ -116,8 +107,8 @@ export class TransferService {
   public async showTransferHistory(token: any) {
     const payloadToken = await this.authService.decodedToken(token);
 
-    const user = await this.userService.getUserByEmail(payloadToken);
-    const userAccountOrigin = await this.userService.getUserAccount(
+    const user = await this.getUserByEmail(payloadToken);
+    const userAccountOrigin = await this.getUserAccount(
       user._id,
     );
 
@@ -127,4 +118,27 @@ export class TransferService {
 
     return transferHistory;
   }
+
+  private async getUserByEmail(payload: any) {
+    return await this.mongoRepository.findUserByEmail(payload.email);
+  }
+
+  private async getUserAccount(userId: any) {
+    return await this.mongoRepository.findUserAccountById(userId);
+  }
+
+  private async modifyBalance(userId: string, balance: number, currencyType: string) {
+    console.log(userId, balance, currencyType);
+    
+    if (currencyType === "usd") {
+      return await this.mongoRepository.updateBalanceUserUsd(userId, balance);
+    }
+    return await this.mongoRepository.updateBalanceUserArs(userId, balance);
+  }
+
+  private async getOrigin(destination: string) {
+    const alias = destination
+    return await this.mongoRepository.findUserByAliasOrCbu(alias);
+  }
+ 
 }

@@ -14,7 +14,7 @@ const makeTransfer = async (req: Request, res: Response) => {
   console.log({ bearerToken });
 
   const { origin, destination, amount, pinToken, currency, destinationType } = req.body;
-  const transfersResult = await transferService.createTransfer(bearerToken, origin, destination, amount, pinToken, currency, destinationType);
+  const transfersResult = await transferService.createTransfer(bearerToken, origin, destination, amount, pinToken, currency);
 
   return res.send({"Result of the transfer": transfersResult});
 }
