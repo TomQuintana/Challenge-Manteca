@@ -16,8 +16,6 @@ export class UserAccountService {
     userData.password = await this.authService.hashPassword(userData.password);
 
     const user = await this.mongoRepository.createUser(userData);
-    console.log({ user });
-    
 
     const userAccount = {
       email: userData.email,
@@ -28,14 +26,12 @@ export class UserAccountService {
       userId: user._id,
     };
 
-    
 
     const userCbu = await this.generateUserAccountNumber(12);
     const alias = await this.generteRandomAlias();
 
-    userAccount.cbu = userCbu;
+    userAccount.cbu = userCbu.toString();
     userAccount.alias = alias;
-    console.log({ userAccount });
 
     await this.mongoRepository.createUserAccount(userAccount);
 
