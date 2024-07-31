@@ -1,44 +1,44 @@
 import { Request, Response } from "express";
 import { UserAccountService } from "../../service/userAccount.service"
 
-export class UserAccountController {
-  constructor(private userAccountService: UserAccountService) {
-    this.createNewUseraccount = this.createNewUseraccount.bind(this);
-  }
+const userService = new UserAccountService();
 
-  public createNewUseraccount = async (req: Request, res: Response) => {
-    console.log(req.body);
+const createUser = async (req: Request, res: Response) => {
 
-    try {
-      const userData = req.body;
-      const newUser = await this.userAccountService.registerUserAccount(userData);
+  try {
+    const userData = req.body;
+    const newUser = await userService.registerUserAccount(userData);
 
-      if (!newUser) {
-        return res.status(400).json({
-          msg: "The User is already saved"
-        });
-      }
-
-      console.log(newUser);
-      return res.send({newUser});
-    } catch (error) {
-      console.log(error);
+    if (!newUser) {
+      return res.status(400).json({
+        msg: "The User is already saved"
+      });
     }
-  }
 
-    // try {
-    //   const newBook = await this.userAccountService.registerUserAccount(bookData);
-    //
-  //     if (!newBook) {
-  //       return res.status(400).json({
-  //         msg: "The book is already saved"
-  //       });
-  //     }
-  //
-  //     return res.send({newBook});
-  //
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // };
+    return res.send({newUser});
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+const login = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+    const user = await userService.verifyUser(email, password);
+
+    if (!user) {
+      return res.status(400).json({
+        msg: "The User does not exist"
+      });
+    }
+
+    return res.send({user});
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+export {
+  createUser,
+  login
 }

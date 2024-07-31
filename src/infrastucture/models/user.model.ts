@@ -1,25 +1,28 @@
 import { Schema, model } from 'mongoose';
 
-interface IAccountSchema{
+interface IUserSchema{
   name: string;
   lastname: string;
+  password: string;
   email: string;
   nationality: string;
   age: number;
   civilStatus: string;
   dni: number;
-  accountNumber: Number;
-  alias: String;
   status: string;
   createdAt: Date;
 }
 
-const AccountSchema = new Schema<IAccountSchema>({
+const UserSchema = new Schema<IUserSchema>({
   name: { 
     type: String, 
     required: true 
   },
   lastname: { 
+    type: String, 
+    required: true 
+  },
+  password: { 
     type: String, 
     required: true 
   },
@@ -44,16 +47,6 @@ const AccountSchema = new Schema<IAccountSchema>({
     type: Number,
     required: true 
   },
-  accountNumber: {
-    type: Number,
-    required: false,
-    unique: true,
-  },
-  alias: {
-    type: String,
-    required: false,
-    unique: true,
-  },
   status: {
     type: String,
     enum: ['pending', 'active', 'suspended', 'closed'],
@@ -65,4 +58,4 @@ const AccountSchema = new Schema<IAccountSchema>({
   }
 });
 
-export default model('userAccount', AccountSchema);
+export default model('user', UserSchema);
